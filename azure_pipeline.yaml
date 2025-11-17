@@ -17,19 +17,13 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
-          # Authenticate with Azure Artifacts
-          - task: npmAuthenticate@0
-            inputs:
-              workingFile: 'frontend/.npmrc'
-            displayName: 'Authenticate with Azure Artifacts'
-
           # Install frontend dependencies
           - script: |
               cd frontend
               npm install
             displayName: 'Install Frontend Dependencies'
 
-          # Optional: build frontend if using React/Vue/Angular
+          # Build frontend
           - script: |
               cd frontend
               npm run build
@@ -43,19 +37,13 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
-          # Authenticate with Azure Artifacts
-          - task: npmAuthenticate@0
-            inputs:
-              workingFile: 'backend/.npmrc'
-            displayName: 'Authenticate with Azure Artifacts'
-
           # Install backend dependencies
           - script: |
               cd backend
               npm install
             displayName: 'Install Backend Dependencies'
 
-          # Optional: build backend
+          # Build backend
           - script: |
               cd backend
               npm run build
