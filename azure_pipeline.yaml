@@ -17,32 +17,33 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
-          # Remove ALL .npmrc files and configure public registry
+          # Clean all npm configs and cache
           - script: |
-              # Remove project .npmrc files
+              # Remove ALL .npmrc files
               rm -f frontend/.npmrc
               rm -f backend/.npmrc
               rm -f .npmrc
-              # Remove user .npmrc
               rm -f ~/.npmrc
-              # Remove package-lock.json files (they contain Azure Artifacts URLs)
+              # Remove package-lock.json files
               rm -f frontend/package-lock.json
               rm -f backend/package-lock.json
-              # Create new .npmrc for public registry
-              echo "registry=https://registry.npmjs.org/" > frontend/.npmrc
-              echo "registry=https://registry.npmjs.org/" > backend/.npmrc
-            displayName: 'Configure npm for Public Registry'
-
-          # Clean npm cache
-          - script: |
+              # Clear npm cache completely
               npm cache clean --force
-            displayName: 'Clean npm Cache'
-            continueOnError: true
+              rm -rf ~/.npm
+              # Set global npm config to use public registry
+              npm config set registry https://registry.npmjs.org/
+              npm config delete audit-level
+              # Create new .npmrc files
+              echo "registry=https://registry.npmjs.org/" > frontend/.npmrc
+              echo "audit=false" >> frontend/.npmrc
+              echo "registry=https://registry.npmjs.org/" > backend/.npmrc
+              echo "audit=false" >> backend/.npmrc
+            displayName: 'Clean npm Configuration'
 
-          # Install frontend dependencies (will regenerate package-lock.json)
+          # Install frontend dependencies
           - script: |
               cd frontend
-              npm install --loglevel=error --fetch-timeout=600000 --fetch-retries=5
+              npm install --no-audit --no-fund --loglevel=error
             displayName: 'Install Frontend Dependencies'
             timeoutInMinutes: 15
 
@@ -64,7 +65,7 @@ stages:
           # Install backend dependencies
           - script: |
               cd backend
-              npm install --loglevel=error --fetch-timeout=600000 --fetch-retries=5
+              npm install --no-audit --no-fund --loglevel=error
             displayName: 'Install Backend Dependencies'
             timeoutInMinutes: 15
 
