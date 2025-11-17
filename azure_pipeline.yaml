@@ -12,9 +12,16 @@ stages:
       - job: frontend_build
         displayName: 'Build Frontend'
         steps:
-          - task: UseNode@1
+          - task: NodeTool@0
             inputs:
               versionSpec: '22.x'
+            displayName: 'Install Node.js'
+
+          # Authenticate with Azure Artifacts
+          - task: npmAuthenticate@0
+            inputs:
+              workingFile: 'frontend/.npmrc'
+            displayName: 'Authenticate with Azure Artifacts'
 
           # Install frontend dependencies
           - script: |
@@ -31,9 +38,16 @@ stages:
       - job: backend_build
         displayName: 'Build Backend'
         steps:
-          - task: UseNode@1
+          - task: NodeTool@0
             inputs:
               versionSpec: '22.x'
+            displayName: 'Install Node.js'
+
+          # Authenticate with Azure Artifacts
+          - task: npmAuthenticate@0
+            inputs:
+              workingFile: 'backend/.npmrc'
+            displayName: 'Authenticate with Azure Artifacts'
 
           # Install backend dependencies
           - script: |
@@ -50,6 +64,7 @@ stages:
 # Trivy scan stages
   - stage: Trivy_FS_Scan
     displayName: 'Trivy FS Scan Frontend & Backend'
+    dependsOn: Build
     jobs:
       - job: trivy_fs_scan_frontend
         displayName: 'Trivy FS Scan Frontend'
@@ -78,6 +93,7 @@ stages:
 # SonarQube stages
   - stage: SonarQube_Frontend
     displayName: 'Sonar Analysis for Frontend'
+    dependsOn: Build
     jobs:
       - job: sonarqube_analysis_Frontend
         steps:
@@ -95,6 +111,7 @@ stages:
 
   - stage: SonarQube_Backend
     displayName: 'Sonar Analysis for Backend'
+    dependsOn: Build
     jobs:
       - job: sonarqube_analysis_Backend
         steps:
@@ -113,6 +130,9 @@ stages:
 # Docker build and push stages
   - stage: Docker_Build_push_backend
     displayName: 'Docker Build and Push Backend'
+    dependsOn: 
+      - Trivy_FS_Scan
+      - SonarQube_Backend
     jobs:
       - job: docker_build_push
         displayName: 'Docker Build and Push Backend'
@@ -127,6 +147,9 @@ stages:
 
   - stage: Docker_Build_push_frontend
     displayName: 'Docker Build and Push Frontend'
+    dependsOn: 
+      - Trivy_FS_Scan
+      - SonarQube_Frontend
     jobs:
       - job: docker_build_push
         displayName: 'Docker Build and Push Frontend'
@@ -142,6 +165,9 @@ stages:
 # AKS deployment stage
   - stage: deploy_to_aks
     displayName: 'Deploy to AKS'
+    dependsOn:
+      - Docker_Build_push_backend
+      - Docker_Build_push_frontend
     jobs:
       - job: deploy_to_aks
         displayName: 'Deploy to AKS'
