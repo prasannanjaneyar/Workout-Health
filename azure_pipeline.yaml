@@ -19,15 +19,17 @@ stages:
 
           # Install frontend dependencies
           - script: |
-              cd frontend
-              npm install
-            displayName: 'Install Frontend Dependencies'
+             cd frontend
+             npm ci --prefer-offline --no-audit
+             displayName: 'Install Frontend Dependencies'
+             timeoutInMinutes: 15
 
           # Build frontend
           - script: |
               cd frontend
-              npm run build
-            displayName: 'Build Frontend'
+              npm ci --prefer-offline --no-audit
+              displayName: 'Install Frontend Dependencies'
+              timeoutInMinutes: 15
 
       - job: backend_build
         displayName: 'Build Backend'
