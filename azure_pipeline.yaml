@@ -21,19 +21,23 @@ stages:
           - script: |
               # Remove ALL .npmrc files
               rm -f frontend/.npmrc
+              rm -f backend/.npmrc
               rm -f .npmrc
               rm -f ~/.npmrc
               # Remove package-lock.json files
               rm -f frontend/package-lock.json
+              rm -f backend/package-lock.json
               # Clear npm cache completely
               npm cache clean --force
               rm -rf ~/.npm
-              # Set global npm config to use public registry
+              # Set global npm config
               npm config set registry https://registry.npmjs.org/
-              npm config delete audit-level
+              npm config set audit false
               # Create new .npmrc files
               echo "registry=https://registry.npmjs.org/" > frontend/.npmrc
               echo "audit=false" >> frontend/.npmrc
+              echo "registry=https://registry.npmjs.org/" > backend/.npmrc
+              echo "audit=false" >> backend/.npmrc
             displayName: 'Clean npm Configuration'
 
           # Install frontend dependencies
@@ -57,21 +61,26 @@ stages:
             inputs:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
-           # Clean all npm configs and cache
+
+          # Clean all npm configs and cache (SAME AS FRONTEND)
           - script: |
               # Remove ALL .npmrc files
+              rm -f frontend/.npmrc
               rm -f backend/.npmrc
               rm -f .npmrc
               rm -f ~/.npmrc
               # Remove package-lock.json files
+              rm -f frontend/package-lock.json
               rm -f backend/package-lock.json
               # Clear npm cache completely
               npm cache clean --force
               rm -rf ~/.npm
-              # Set global npm config to use public registry
+              # Set global npm config
               npm config set registry https://registry.npmjs.org/
-              npm config delete audit-level
+              npm config set audit false
               # Create new .npmrc files
+              echo "registry=https://registry.npmjs.org/" > frontend/.npmrc
+              echo "audit=false" >> frontend/.npmrc
               echo "registry=https://registry.npmjs.org/" > backend/.npmrc
               echo "audit=false" >> backend/.npmrc
             displayName: 'Clean npm Configuration'
