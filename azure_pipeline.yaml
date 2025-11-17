@@ -12,6 +12,9 @@ stages:
       - job: frontend_build
         displayName: 'Build Frontend'
         steps:
+          - task: npmAuthenticate@0
+            inputs:
+              workingFile: 'backend/.npmrc'
           - task: UseNode@1
             inputs:
               versionSpec: '22.x'
