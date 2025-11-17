@@ -14,7 +14,9 @@ stages:
         steps:
           - task: NodeTool@0
             inputs:
+              versionSource: 'spec'
               versionSpec: '22.x'
+              checkLatest: true
             displayName: 'Install Node.js'
 
           # Remove Azure Artifacts .npmrc and create new one for public registry
@@ -49,7 +51,9 @@ stages:
         steps:
           - task: NodeTool@0
             inputs:
+              versionSource: 'spec'
               versionSpec: '22.x'
+              checkLatest: true
             displayName: 'Install Node.js'
 
           # Remove Azure Artifacts .npmrc and create new one for public registry
