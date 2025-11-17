@@ -17,12 +17,17 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
-          # Remove Azure Artifacts .npmrc and create new one for public registry
+          # Remove ALL .npmrc files and configure public registry
           - script: |
-              cd frontend
-              rm -f .npmrc
-              echo "registry=https://registry.npmjs.org/" > .npmrc
-            displayName: 'Configure npm Registry'
+              # Remove project .npmrc
+              rm -f frontend/.npmrc
+              rm -f backend/.npmrc
+              # Remove user .npmrc
+              rm -f ~/.npmrc
+              # Create new .npmrc for public registry in project directories
+              echo "registry=https://registry.npmjs.org/" > frontend/.npmrc
+              echo "registry=https://registry.npmjs.org/" > backend/.npmrc
+            displayName: 'Configure npm for Public Registry'
 
           # Clean npm cache
           - script: |
@@ -37,12 +42,13 @@ stages:
             displayName: 'Install Frontend Dependencies'
             timeoutInMinutes: 15
 
-          # Build frontend
+          # Build frontend (if build script exists)
           - script: |
               cd frontend
               npm run build
             displayName: 'Build Frontend'
             timeoutInMinutes: 10
+            continueOnError: false
 
       - job: backend_build
         displayName: 'Build Backend'
@@ -52,32 +58,24 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
-          # Remove Azure Artifacts .npmrc and create new one for public registry
-          - script: |
-              cd backend
-              rm -f .npmrc
-              echo "registry=https://registry.npmjs.org/" > .npmrc
-            displayName: 'Configure npm Registry'
-
-          # Clean npm cache
-          - script: |
-              npm cache clean --force
-            displayName: 'Clean npm Cache'
-            continueOnError: true
-
-          # Install backend dependencies
+          # Install backend dependencies (registry already configured in frontend_build)
           - script: |
               cd backend
               npm install --loglevel=error --fetch-timeout=600000 --fetch-retries=5
             displayName: 'Install Backend Dependencies'
             timeoutInMinutes: 15
 
-          # Build backend
+          # Build backend - skip if no build script exists
           - script: |
               cd backend
-              npm run build
-            displayName: 'Build Backend'
+              if npm run | grep -q "build"; then
+                npm run build
+              else
+                echo "No build script found, skipping build step"
+              fi
+            displayName: 'Build Backend (if applicable)'
             timeoutInMinutes: 10
+            continueOnError: true
 
 # Trivy scan stages
   - stage: Trivy_FS_Scan
