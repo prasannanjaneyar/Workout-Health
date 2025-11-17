@@ -17,19 +17,32 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
+          # Remove Azure Artifacts .npmrc and create new one for public registry
+          - script: |
+              cd frontend
+              rm -f .npmrc
+              echo "registry=https://registry.npmjs.org/" > .npmrc
+            displayName: 'Configure npm Registry'
+
+          # Clean npm cache
+          - script: |
+              npm cache clean --force
+            displayName: 'Clean npm Cache'
+            continueOnError: true
+
           # Install frontend dependencies
           - script: |
-             cd frontend
-             npm ci --prefer-offline --no-audit
-             displayName: 'Install Frontend Dependencies'
-             timeoutInMinutes: 15
+              cd frontend
+              npm install --loglevel=error --fetch-timeout=600000 --fetch-retries=5
+            displayName: 'Install Frontend Dependencies'
+            timeoutInMinutes: 15
 
           # Build frontend
           - script: |
               cd frontend
-              npm ci --prefer-offline --no-audit
-              displayName: 'Install Frontend Dependencies'
-              timeoutInMinutes: 15
+              npm run build
+            displayName: 'Build Frontend'
+            timeoutInMinutes: 10
 
       - job: backend_build
         displayName: 'Build Backend'
@@ -39,17 +52,32 @@ stages:
               versionSpec: '22.x'
             displayName: 'Install Node.js'
 
+          # Remove Azure Artifacts .npmrc and create new one for public registry
+          - script: |
+              cd backend
+              rm -f .npmrc
+              echo "registry=https://registry.npmjs.org/" > .npmrc
+            displayName: 'Configure npm Registry'
+
+          # Clean npm cache
+          - script: |
+              npm cache clean --force
+            displayName: 'Clean npm Cache'
+            continueOnError: true
+
           # Install backend dependencies
           - script: |
               cd backend
-              npm install
+              npm install --loglevel=error --fetch-timeout=600000 --fetch-retries=5
             displayName: 'Install Backend Dependencies'
+            timeoutInMinutes: 15
 
           # Build backend
           - script: |
               cd backend
               npm run build
             displayName: 'Build Backend'
+            timeoutInMinutes: 10
 
 # Trivy scan stages
   - stage: Trivy_FS_Scan
