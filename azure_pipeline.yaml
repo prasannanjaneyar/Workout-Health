@@ -77,7 +77,7 @@ stages:
         steps:
           - task: SonarQubePrepare@7
             inputs:
-              SonarQube: 'sonar_svc'
+              SonarQube: 'sonarqube_svc'
               scannerMode: 'cli'
               configMode: 'manual'
               cliProjectKey: 'devops_frontend'
@@ -94,7 +94,7 @@ stages:
         steps:
           - task: SonarQubePrepare@7
             inputs:
-              SonarQube: 'sonar_svc'
+              SonarQube: 'sonarqube_svc'
               scannerMode: 'cli'
               configMode: 'manual'
               cliProjectKey: 'devops_backend'
@@ -116,7 +116,7 @@ stages:
               repository: 'react_backend'
               command: 'buildAndPush'
               Dockerfile: 'backend/Dockerfile'
-              tags: latest
+              tags: 'latest'
 
   - stage: Docker_Build_push_frontend
     displayName: 'Docker Build and push frontend'    
@@ -142,7 +142,7 @@ stages:
             inputs:
               action: 'deploy'
               connectionType: 'kubernetesServiceConnection'
-              kubernetesServiceConnection: 'k8s'
+              kubernetesServiceConnection: 'aks-svc'
               namespace: 'default'
               manifests: 'k8s/*.yaml'
           
