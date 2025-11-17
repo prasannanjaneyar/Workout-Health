@@ -14,7 +14,9 @@ stages:
         steps:
           - task: NodeTool@0
             inputs:
+              versionSource: 'spec'
               versionSpec: '22.x'
+              checkLatest: true
             displayName: 'Install Node.js'
 
           # Remove ALL .npmrc files and configure public registry
@@ -55,7 +57,9 @@ stages:
         steps:
           - task: NodeTool@0
             inputs:
+              versionSource: 'spec'
               versionSpec: '22.x'
+              checkLatest: true
             displayName: 'Install Node.js'
 
           # Install backend dependencies (registry already configured in frontend_build)
