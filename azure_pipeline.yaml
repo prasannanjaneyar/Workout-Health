@@ -7,7 +7,7 @@ pool:
     - agent.name -equals mi-agent
 
 stages:
-  - stage: Build_and_Publish
+  - stage: Build
     jobs:
       - job: frontend_build
         displayName: 'Build Frontend'
@@ -16,24 +16,17 @@ stages:
             inputs:
               versionSpec: '22.x'
 
-          # Authenticate to Azure Artifacts for frontend
-          - task: npmAuthenticate@0
-            inputs:
-              workingFile: 'frontend/.npmrc'
-
           # Install frontend dependencies
           - script: |
               cd frontend
               npm install
             displayName: 'Install Frontend Dependencies'
 
-          # Publish frontend package
-          - task: Npm@1
-            inputs:
-              command: 'publish'
-              workingDir: 'frontend'
-              publishRegistry: 'useFeed'
-              publishFeed: '1a29b602-804a-4b5f-98ec-a3680fa3a7c7/53181145-53f0-4463-ae52-0df8338f6f31'
+          # Optional: build frontend if using React/Vue/Angular
+          - script: |
+              cd frontend
+              npm run build
+            displayName: 'Build Frontend'
 
       - job: backend_build
         displayName: 'Build Backend'
@@ -42,37 +35,29 @@ stages:
             inputs:
               versionSpec: '22.x'
 
-          # Authenticate to Azure Artifacts for backend
-          - task: npmAuthenticate@0
-            inputs:
-              workingFile: 'backend/.npmrc'
-
           # Install backend dependencies
           - script: |
               cd backend
               npm install
             displayName: 'Install Backend Dependencies'
 
-          # Publish backend package
-          - task: Npm@1
-            inputs:
-              command: 'publish'
-              workingDir: 'backend'
-              publishRegistry: 'useFeed'
-              publishFeed: '1a29b602-804a-4b5f-98ec-a3680fa3a7c7/53181145-53f0-4463-ae52-0df8338f6f31'
+          # Optional: build backend
+          - script: |
+              cd backend
+              npm run build
+            displayName: 'Build Backend'
 
-# Trivy scan stages (unchanged)
+# Trivy scan stages
   - stage: Trivy_FS_Scan
     displayName: 'Trivy FS Scan Frontend & Backend'
     jobs:
       - job: trivy_fs_scan_frontend
         displayName: 'Trivy FS Scan Frontend'
         steps:
-          - task: CmdLine@2
-            inputs:
-              script: |
-                cd frontend
-                trivy fs --format table -o trivy-frontend.html .
+          - script: |
+              cd frontend
+              trivy fs --format table -o trivy-frontend.html .
+            displayName: 'Trivy Scan Frontend'
           - task: PublishPipelineArtifact@1
             inputs:
               artifactName: 'frontend-report'
@@ -81,17 +66,16 @@ stages:
       - job: trivy_fs_scan_backend
         displayName: 'Trivy FS Scan Backend'
         steps:
-          - task: CmdLine@2
-            inputs:
-              script: |
-                cd backend
-                trivy fs --format table -o trivy-backend.html .
+          - script: |
+              cd backend
+              trivy fs --format table -o trivy-backend.html .
+            displayName: 'Trivy Scan Backend'
           - task: PublishPipelineArtifact@1
             inputs:
               artifactName: 'backend-report'
               targetPath: 'backend/trivy-backend.html'
 
-# SonarQube stages (unchanged)
+# SonarQube stages
   - stage: SonarQube_Frontend
     displayName: 'Sonar Analysis for Frontend'
     jobs:
@@ -126,12 +110,12 @@ stages:
             inputs:
               jdkversion: 'JAVA_HOME_17_X64'
 
-# Docker build and push stages (unchanged)
+# Docker build and push stages
   - stage: Docker_Build_push_backend
-    displayName: 'Docker Build and push backend'
+    displayName: 'Docker Build and Push Backend'
     jobs:
       - job: docker_build_push
-        displayName: 'Docker Build and push backend'
+        displayName: 'Docker Build and Push Backend'
         steps:
           - task: Docker@2
             inputs:
@@ -142,10 +126,10 @@ stages:
               tags: 'latest'
 
   - stage: Docker_Build_push_frontend
-    displayName: 'Docker Build and push frontend'
+    displayName: 'Docker Build and Push Frontend'
     jobs:
       - job: docker_build_push
-        displayName: 'Docker Build and push frontend'
+        displayName: 'Docker Build and Push Frontend'
         steps:
           - task: Docker@2
             inputs:
@@ -153,9 +137,9 @@ stages:
               repository: 'react_frontend'
               command: 'buildAndPush'
               Dockerfile: 'frontend/Dockerfile'
-              tags: latest
+              tags: 'latest'
 
-# AKS deployment stage (unchanged)
+# AKS deployment stage
   - stage: deploy_to_aks
     displayName: 'Deploy to AKS'
     jobs:
